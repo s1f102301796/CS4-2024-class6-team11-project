@@ -29,11 +29,16 @@ class Othello(models.Model):
 
     def initialize_board(self):
         # オセロの初期盤面設定
-        self.board = [[None] * 8 for _ in range(8)]
+        if not self.board or len(self.board) != 8 or any(len(row) != 8 for row in self.board):
+            # ボードが無効または空の場合、初期化
+            self.board = [[None] * 8 for _ in range(8)]
         self.board[3][3] = self.board[4][4] = "white"
         self.board[3][4] = self.board[4][3] = "black"
         self.current_turn = "black"
+        self.winner = None  # 勝者データもリセット
         self.save()
+
+
 
     def is_valid_position(self, x, y):
         # ボード内の有効な座標か判定

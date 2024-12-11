@@ -1,34 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Othello - Game</title>
-    <link rel="stylesheet" href="{% static 'game/css/othello.css' %}">
-</head>
-<body>
-    <div class="game-container">
-        <header>
-            <h1>Othello Game</h1>
-            <div class="game-info">
-                <p>Current Turn: <span id="current-turn">Black</span></p>
-                <p id="game-status"></p>
-            </div>
-        </header>
-        
-        <main>
-            <div id="board-container">
-                <div id="game-board"></div>
-                <p id="current-turn">Loading...</p>
-            </div>
-        </main>
-        
-        <footer>
-            <button id="restart-button">Restart Game</button>
-            <a href="{% url 'index' %}" class="menu-link">Return to Menu</a>
-        </footer>
-    </div>
+{% extends 'game/base.html' %}
+{% load static %}
+{% block title %}Othello Game{% endblock %}
 
-    <script src="{% static 'game/js/othello.js' %}"></script>
-</body>
-</html>
+{% block content %}
+<h1>Othello Game</h1>
+
+<div id="othello-board">
+    <table>
+        {% for row in board %}
+        <tr>
+            {% for cell in row %}
+            <td id="cell-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}"
+                class="cell {% if cell == 'black' %}black{% elif cell == 'white' %}white{% endif %}">
+                {% if cell == 'black' %}
+                    ⚫
+                {% elif cell == 'white' %}
+                    ⚪
+                {% elif cell == 'None' %}
+                    &nbsp;
+                {% endif %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<p>Current Turn: <span id="current-turn">{{ current_turn }}</span></p>
+
+<script src="{% static 'game/js/othello.js' %}"></script>
+{% endblock %}
+
+

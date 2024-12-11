@@ -1,74 +1,79 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const boardContainer = document.getElementById("board-container");
-    const currentTurn = document.getElementById("current-turn");
-    const gameStatus = document.getElementById("game-status");
-    const restartButton = document.getElementById("restart-button");
-
-    // 初期化処理
-    function initializeBoard() {
-        boardContainer.innerHTML = ""; // ボードのリセット
-        for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-                const cell = document.createElement("div");
-                cell.dataset.row = i;
-                cell.dataset.col = j;
-                cell.addEventListener("click", handleCellClick);
-                boardContainer.appendChild(cell);
-            }
-        }
-        updateTurnDisplay("Black");
-    }
-
-    function handleCellClick(event) {
-        const row = event.target.dataset.row;
-        const col = event.target.dataset.col;
-        console.log(`Cell clicked at: (${row}, ${col})`);
-        // Djangoとの通信（駒を置く処理）
-    }
-
-    function updateTurnDisplay(turn) {
-        currentTurn.textContent = turn;
-    }
-
-    restartButton.addEventListener("click", initializeBoard);
-
-    // ゲームの初期化
-    initializeBoard();
-});
-
 document.addEventListener("DOMContentLoaded", () => {
-    fetch('/game/get_board/')
-        .then(response => response.json())
-        .then(data => {
-            drawBoard(data.board, data.current_turn);
-        })
-        .catch(error => console.error('Error fetching board:', error));
-});
+    const boardElement = document.getElementById("othello-board");
+    const currentTurnElement = document.getElementById("current-turn");
 
-function drawBoard(board, currentTurn) {
-    const boardElement = document.getElementById('game-board');
-    boardElement.innerHTML = ''; // 一旦クリア
+    // API リクエストの共通関数
+    function apiRequest(endpoint, method = "GET", body = null) {
+        const options = { method };
+        if (body) {
+            options.headers = { "Content-Type": "application/json" };
+            options.body = JSON.stringify(body);
+        }
+        return fetch(endpoint, options).then(response => response.json());
+    }
 
-    board.forEach((row, x) => {
-        const rowElement = document.createElement('div');
-        rowElement.classList.add('row');
-        row.forEach((cell, y) => {
-            const cellElement = document.createElement('div');
-            cellElement.classList.add('cell');
-            cellElement.dataset.x = x;
-            cellElement.dataset.y = y;
+    // ボードデータの取得と更新
+    function fetchBoard() {
+        apiRequest("/game/get_board/")
+            .then(data => {
+                console.log("Board data received:", data); // デバッグ用
+                updateBoard(data.board);
+                updateCurrentTurn(data.current_turn);
+            })
+            .catch(error => console.error("Error fetching board:", error));
+    }
 
-            if (cell === 'black') {
-                cellElement.classList.add('black-disc');
-            } else if (cell === 'white') {
-                cellElement.classList.add('white-disc');
-            }
-
-            rowElement.appendChild(cellElement);
+    // ボードを更新
+    function updateBoard(board) {
+        // 既存の行を削除する
+        while (boardElement.firstChild) {
+            boardElement.removeChild(boardElement.firstChild);
+        }
+    
+        board.forEach((row, rowIndex) => {
+            const rowElement = document.createElement("div");
+            rowElement.className = "board-row";
+    
+            row.forEach((cell, colIndex) => {
+                const cellElement = document.createElement("div");
+                cellElement.className = "board-cell";
+    
+                if (cell === "black") {
+                    cellElement.classList.add("disc-black");
+                } else if (cell === "white") {
+                    cellElement.classList.add("disc-white");
+                }
+    
+                // セルクリックイベント
+                cellElement.addEventListener("click", () => {
+                    if (!cell) placeDisc(rowIndex, colIndex); // 空白セルのみクリック可能
+                });
+    
+                rowElement.appendChild(cellElement);
+            });
+    
+            boardElement.appendChild(rowElement);
         });
-        boardElement.appendChild(rowElement);
-    });
+    }
 
-    document.getElementById('current-turn').textContent = `Current Turn: ${currentTurn}`;
-}
+    // 現在のターンを更新
+    function updateCurrentTurn(turn) {
+        currentTurnElement.textContent = `Current Turn: ${turn}`;
+    }
 
+    // 駒を置くリクエスト
+    function placeDisc(row, col) {
+        apiRequest(`/game/place_disc/${row}/${col}/`)
+            .then(data => {
+                if (data.success) {
+                    fetchBoard();
+                } else {
+                    alert(data.message); // 無効な移動の場合にメッセージを表示
+                }
+            })
+            .catch(error => console.error("Error placing disc:", error));
+    }
+
+    // 初期ロード時にボードを取得
+    fetchBoard();
+});

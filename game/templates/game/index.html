@@ -1,22 +1,18 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Othello - Main Menu</title>
+    <title>Othello - Menu</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <div class="menu-container">
         <h1>Othello</h1>
-        <p>Welcome to the Othello game! Choose an option to proceed:</p>
-        <button onclick="startGame()">Start Game</button>
+        <p>Welcome to the Othello game! Click the button below to start.</p>
+        <a href="{% url 'othello_game' %}" class="btn">Start Game</a>
     </div>
-
-    <script>
-        function startGame() {
-            window.location.href = "{% url 'othello_game' %}"; // DjangoのURLリバース機能
-        }
-    </script>
 </body>
 </html>
 
