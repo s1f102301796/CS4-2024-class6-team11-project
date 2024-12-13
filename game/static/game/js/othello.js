@@ -30,18 +30,25 @@ document.addEventListener("DOMContentLoaded", () => {
             boardElement.removeChild(boardElement.firstChild);
         }
     
+        // ボードを生成
+        const tableElement = document.createElement("table");
+    
         board.forEach((row, rowIndex) => {
-            const rowElement = document.createElement("div");
-            rowElement.className = "board-row";
+            const rowElement = document.createElement("tr");
     
             row.forEach((cell, colIndex) => {
-                const cellElement = document.createElement("div");
-                cellElement.className = "board-cell";
+                const cellElement = document.createElement("td");
+                cellElement.id = `cell-${rowIndex}-${colIndex}`;
+                cellElement.className = "cell";
     
                 if (cell === "black") {
-                    cellElement.classList.add("disc-black");
+                    cellElement.classList.add("black");
+                    cellElement.textContent = "⚫";
                 } else if (cell === "white") {
-                    cellElement.classList.add("disc-white");
+                    cellElement.classList.add("white");
+                    cellElement.textContent = "⚪";
+                } else {
+                    cellElement.textContent = " "; // 空白
                 }
     
                 // セルクリックイベント
@@ -52,10 +59,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 rowElement.appendChild(cellElement);
             });
     
-            boardElement.appendChild(rowElement);
+            tableElement.appendChild(rowElement);
         });
+    
+        boardElement.appendChild(tableElement);
     }
-
+    
     // 現在のターンを更新
     function updateCurrentTurn(turn) {
         currentTurnElement.textContent = `Current Turn: ${turn}`;
@@ -73,6 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .catch(error => console.error("Error placing disc:", error));
     }
+
+    
 
     // 初期ロード時にボードを取得
     fetchBoard();

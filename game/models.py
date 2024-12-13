@@ -29,15 +29,12 @@ class Othello(models.Model):
 
     def initialize_board(self):
         # オセロの初期盤面設定
-        if not self.board or len(self.board) != 8 or any(len(row) != 8 for row in self.board):
-            # ボードが無効または空の場合、初期化
-            self.board = [[None] * 8 for _ in range(8)]
+        self.board = [[None] * 8 for _ in range(8)]
         self.board[3][3] = self.board[4][4] = "white"
         self.board[3][4] = self.board[4][3] = "black"
         self.current_turn = "black"
         self.winner = None  # 勝者データもリセット
         self.save()
-
 
 
     def is_valid_position(self, x, y):
@@ -85,26 +82,39 @@ class Othello(models.Model):
         self.save()
 
     def switch_turn(self):
-        # プレイヤーのターンを切り替え
+        # 現在のプレイヤーのターンを切り替える
         self.current_turn = "white" if self.current_turn == "black" else "black"
+
+        # 次のプレイヤーが駒を置けない場合、さらにターンを切り替える
         if not self.can_any_player_move():
+            print(f"No valid moves for {self.current_turn}. Switching turn again.")
             self.current_turn = "white" if self.current_turn == "black" else "black"
+
+            # 両プレイヤーが置けない場合はゲーム終了
             if not self.can_any_player_move():
+                print("No valid moves for both players. Ending the game.")
                 self.check_game_over()
 
+
     def can_any_player_move(self):
-        # 現在のターンで駒を置けるか確認
+        # 現在のターンで駒を置ける位置があるか確認
         for x in range(8):
             for y in range(8):
                 if self.can_place(x, y):
+                    print(f"Player {self.current_turn} can place at ({x}, {y})")
                     return True
+        print(f"Player {self.current_turn} has no valid moves.")
         return False
 
+
     def check_game_over(self):
-        # ゲーム終了を確認し、勝者を決定
+        # 黒と白の駒の数をカウント
         black_count = sum(row.count("black") for row in self.board)
         white_count = sum(row.count("white") for row in self.board)
 
+        print(f"Black count: {black_count}, White count: {white_count}")
+
+        # すべてのマスが埋まるか、両プレイヤーが駒を置けない場合に終了
         if black_count + white_count == 64 or not self.can_any_player_move():
             if black_count > white_count:
                 self.winner = "black"
@@ -113,6 +123,11 @@ class Othello(models.Model):
             else:
                 self.winner = None  # 引き分け
             self.save()
+            print(f"Game over. Winner: {self.winner}")
+        else:
+            print("Game not over yet.")
+
+
 
     def place_disc(self, x, y):
         # 指定位置に駒を置く
@@ -125,7 +140,9 @@ class Othello(models.Model):
 
         self.flip_discs(x, y)
         self.switch_turn()
+        self.save()  # 状態を保存
         return "Disc placed successfully."
+
 
     def __str__(self):
         return f"Othello Game - Current Turn: {self.current_turn}"

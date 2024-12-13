@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from .models import Othello
 import json
@@ -25,8 +25,6 @@ def othello_game(request):
         'current_turn': current_turn,
     })
 
-
-
 def place_disc(request, row, col):
     game = get_object_or_404(Othello, id=1)
     row, col = int(row), int(col)
@@ -49,3 +47,17 @@ def get_board(request):
     # None を null に変換
     board = [[cell if cell is not None else None for cell in row] for row in game.board]
     return JsonResponse({'board': board, 'current_turn': game.current_turn})
+
+def othello_game_view(request, game_id):
+    game = get_object_or_404(Othello, id=game_id)
+
+    # デバッグ用ログ出力
+    print(f"Current Turn: {game.current_turn}")
+    print(f"Winner: {game.winner}")
+
+    context = {
+        "board": game.board,
+        "current_turn": game.current_turn,
+        "winner": game.winner,
+    }
+    return render(request, "othello.html", context)

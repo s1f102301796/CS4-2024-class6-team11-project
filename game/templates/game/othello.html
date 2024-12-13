@@ -5,30 +5,23 @@
 {% block content %}
 <h1>Othello Game</h1>
 
-<div id="othello-board">
-    <table>
-        {% for row in board %}
-        <tr>
-            {% for cell in row %}
-            <td id="cell-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}"
-                class="cell {% if cell == 'black' %}black{% elif cell == 'white' %}white{% endif %}">
-                {% if cell == 'black' %}
-                    ⚫
-                {% elif cell == 'white' %}
-                    ⚪
-                {% elif cell == 'None' %}
-                    &nbsp;
-                {% endif %}
-            </td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
-</div>
+<div id="othello-board"></div> <!-- JavaScriptがボードを描画 -->
+<p><span id="current-turn"></span></p>
 
-<p>Current Turn: <span id="current-turn">{{ current_turn }}</span></p>
+{% if winner %}
+    <div id="winner-announcement">
+        <h2>Game Over!</h2>
+        {% if winner == "black" %}
+            <p>Winner: Black</p>
+        {% elif winner == "white" %}
+            <p>Winner: White</p>
+        {% else %}
+            <p>It's a draw!</p>
+        {% endif %}
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+{% endif %}
 
 <script src="{% static 'game/js/othello.js' %}"></script>
 {% endblock %}
-
 
