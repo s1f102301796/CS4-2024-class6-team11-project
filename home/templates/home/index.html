@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    {% load static %}
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOME</title>
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+</head>
+<body>
+    <h1>チーム11ゲーム</h1>
+    ようこそ！<br>
+    <a href="{% url 'index' %}" class="btn">Go To Othello Game</a>
+</body>
+</html>
