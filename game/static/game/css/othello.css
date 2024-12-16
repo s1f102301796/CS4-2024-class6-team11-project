@@ -1,50 +1,86 @@
+/* オセロ盤全体のスタイル */
 #othello-board table {
     border-collapse: collapse;
     margin: 20px auto;
-    background-color: green;
+    background-color: #007200; /* オセロらしい濃い緑 */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* 立体感 */
 }
 
 #othello-board td {
-    width: 40px;
-    height: 40px;
-    border: 1px solid #000;
+    width: 60px; /* セルの大きさを拡大 */
+    height: 60px;
+    border: 1px solid #003300; /* より濃い枠線 */
+    position: relative; /* 子要素の絶対配置用 */
     text-align: center;
-    vertical-align: middle;
-    font-size: 24px; /* アイコンサイズ調整 */
 }
 
-#othello-board .cell.black {
+/* 駒（白・黒）のデザイン */
+#othello-board .cell.black::before,
+#othello-board .cell.white::before {
+    content: "";
+    width: 80%; /* 駒のサイズ */
+    height: 80%;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.5);
+}
+
+#othello-board .cell.black::before {
     background-color: black;
-    border-radius: 50%;
 }
 
-#othello-board .cell.white {
+#othello-board .cell.white::before {
     background-color: white;
+    box-shadow: inset -2px -2px 5px rgba(255, 255, 255, 0.5); /* 白駒の影 */
+}
+
+/* 設置可能なマスのスタイル */
+.cell.placeable::after {
+    content: "";
+    width: 30%;
+    height: 30%;
     border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.4); /* 半透明の円 */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none; /* クリックイベントを透過 */
 }
 
+/* クリック可能を示す */
 #othello-board .cell {
-    cursor: pointer; /* クリック可能を示すカーソル */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
+#othello-board .cell:hover {
+    background-color: #009900; /* ホバー時のセルの色 */
+}
+
+/* 勝者発表セクション */
 #winner-announcement {
     text-align: center;
     margin-top: 20px;
     padding: 20px;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    border-radius: 5px;
+    background-color: #f0f8ff;
+    border: 2px solid #0056b3;
+    color: #004085;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 #winner-announcement h2 {
     margin: 0;
-    font-size: 24px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
 }
 
 #winner-announcement p {
     margin: 10px 0;
-    font-size: 18px;
+    font-size: 20px;
 }
-
-

@@ -105,6 +105,16 @@ class Othello(models.Model):
                     return True
         print(f"Player {self.current_turn} has no valid moves.")
         return False
+    
+
+    def get_placeable_positions(self):
+        # 設置可能なマスのリストを返す [(x, y), ...] の形式
+        placeable_positions = []
+        for x in range(8):
+            for y in range(8):
+                if self.can_place(x, y):
+                    placeable_positions.append((x, y))
+        return placeable_positions
 
 
     def check_game_over(self):

@@ -17,14 +17,14 @@ document.addEventListener("DOMContentLoaded", () => {
         apiRequest("/game/get_board/")
             .then(data => {
                 console.log("Board data received:", data); // デバッグ用
-                updateBoard(data.board);
+                updateBoard(data.board, data.placeable_positions); // 設置可能なマスを渡す
                 updateCurrentTurn(data.current_turn);
             })
             .catch(error => console.error("Error fetching board:", error));
     }
 
     // ボードを更新
-    function updateBoard(board) {
+    function updateBoard(board, placeablePositions) {
         // 既存の行を削除する
         while (boardElement.firstChild) {
             boardElement.removeChild(boardElement.firstChild);
@@ -43,18 +43,17 @@ document.addEventListener("DOMContentLoaded", () => {
     
                 if (cell === "black") {
                     cellElement.classList.add("black");
-                    cellElement.textContent = "⚫";
                 } else if (cell === "white") {
                     cellElement.classList.add("white");
-                    cellElement.textContent = "⚪";
+                } else if (placeablePositions.some(([x, y]) => x === rowIndex && y === colIndex)) {
+                    // 設置可能なマスのサイン
+                    cellElement.classList.add("placeable");
+                    cellElement.addEventListener("click", () => {
+                        placeDisc(rowIndex, colIndex);
+                    });
                 } else {
                     cellElement.textContent = " "; // 空白
                 }
-    
-                // セルクリックイベント
-                cellElement.addEventListener("click", () => {
-                    if (!cell) placeDisc(rowIndex, colIndex); // 空白セルのみクリック可能
-                });
     
                 rowElement.appendChild(cellElement);
             });
@@ -82,8 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .catch(error => console.error("Error placing disc:", error));
     }
-
-    
 
     // 初期ロード時にボードを取得
     fetchBoard();

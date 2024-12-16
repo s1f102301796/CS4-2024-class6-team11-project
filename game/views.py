@@ -44,12 +44,14 @@ def place_disc(request, row, col):
 def get_board(request):
     # 最新のゲームデータを取得
     game = Othello.objects.latest('created_at')
+    placeable_positions = game.get_placeable_positions()
     # None を null に変換
     board = [[cell if cell is not None else None for cell in row] for row in game.board]
-    return JsonResponse({'board': board, 'current_turn': game.current_turn})
+    return JsonResponse({'board': board, 'current_turn': game.current_turn, "placeable_positions": placeable_positions})
 
 def othello_game_view(request, game_id):
     game = get_object_or_404(Othello, id=game_id)
+    placeable_positions = game.get_placeable_positions()
 
     # デバッグ用ログ出力
     print(f"Current Turn: {game.current_turn}")
@@ -58,6 +60,7 @@ def othello_game_view(request, game_id):
     context = {
         "board": game.board,
         "current_turn": game.current_turn,
+        "placeable_positions": placeable_positions,
         "winner": game.winner,
     }
     return render(request, "othello.html", context)
