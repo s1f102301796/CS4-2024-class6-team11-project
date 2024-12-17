@@ -47,7 +47,7 @@ def get_board(request):
     placeable_positions = game.get_placeable_positions()
     # None を null に変換
     board = [[cell if cell is not None else None for cell in row] for row in game.board]
-    return JsonResponse({'board': board, 'current_turn': game.current_turn, "placeable_positions": placeable_positions})
+    return JsonResponse({'board': board, 'current_turn': game.current_turn, "placeable_positions": placeable_positions,'winner': game.winner})
 
 def othello_game_view(request, game_id):
     game = get_object_or_404(Othello, id=game_id)

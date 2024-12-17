@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const boardElement = document.getElementById("othello-board");
     const currentTurnElement = document.getElementById("current-turn");
+    const winnerElement = document.getElementById("winner");
 
     // API リクエストの共通関数
     function apiRequest(endpoint, method = "GET", body = null) {
@@ -19,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log("Board data received:", data); // デバッグ用
                 updateBoard(data.board, data.placeable_positions); // 設置可能なマスを渡す
                 updateCurrentTurn(data.current_turn);
+                updateWinner(data.winner); // 勝者の表示を更新
             })
             .catch(error => console.error("Error fetching board:", error));
     }
@@ -67,6 +69,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // 現在のターンを更新
     function updateCurrentTurn(turn) {
         currentTurnElement.textContent = `Current Turn: ${turn}`;
+    }
+
+    function updateWinner(winner) {
+        if (winner) {
+            const message =
+                winner === "black"
+                    ? "Game Over! Black wins!"
+                    : winner === "white"
+                    ? "Game Over! White wins!"
+                    : "Game Over! It's a tie!";
+            winnerElement.textContent = message; // 結果を表示
+        } else {
+            winnerElement.textContent = ""; // ゲーム継続中なら空にする
+        }
     }
 
     // 駒を置くリクエスト

@@ -41,6 +41,7 @@ class Othello(models.Model):
         # ボード内の有効な座標か判定
         return 0 <= x < 8 and 0 <= y < 8
 
+
     def can_place(self, x, y):
         # 指定位置に駒を置けるか判定
         if self.board[x][y] is not None:
@@ -60,6 +61,7 @@ class Othello(models.Model):
                 return True
 
         return False
+
 
     def flip_discs(self, x, y):
         # 指定位置で駒を裏返す
@@ -81,6 +83,7 @@ class Othello(models.Model):
         self.board[x][y] = self.current_turn
         self.save()
 
+
     def switch_turn(self):
         # 現在のプレイヤーのターンを切り替える
         self.current_turn = "white" if self.current_turn == "black" else "black"
@@ -94,6 +97,9 @@ class Othello(models.Model):
             if not self.can_any_player_move():
                 print("No valid moves for both players. Ending the game.")
                 self.check_game_over()
+                return
+        
+        print(f"Next turn: {self.current_turn}") # デバッグ用
 
 
     def can_any_player_move(self):
@@ -105,6 +111,17 @@ class Othello(models.Model):
                     return True
         print(f"Player {self.current_turn} has no valid moves.")
         return False
+    
+
+    def can_any_player_move_for(self, player_color):
+        # 現在のターンを一時的に指定のプレイヤーに変更して判定
+        original_turn = self.current_turn
+        self.current_turn = player_color
+        can_move = any(
+            self.can_place(row, col) for row in range(8) for col in range(8)
+        )
+        self.current_turn = original_turn  # 元のターンに戻す
+        return can_move
     
 
     def get_placeable_positions(self):
@@ -124,19 +141,27 @@ class Othello(models.Model):
 
         print(f"Black count: {black_count}, White count: {white_count}")
 
-        # すべてのマスが埋まるか、両プレイヤーが駒を置けない場合に終了
-        if black_count + white_count == 64 or not self.can_any_player_move():
+        # すべてのマスが埋まった場合
+        board_full = black_count + white_count == 64
+
+        # 両プレイヤーが駒を置けない場合
+        no_moves_for_black = not self.can_any_player_move_for("black")
+        no_moves_for_white = not self.can_any_player_move_for("white")
+        both_cannot_move = no_moves_for_black and no_moves_for_white
+
+        # 終了条件
+        if board_full or both_cannot_move:
             if black_count > white_count:
                 self.winner = "black"
             elif white_count > black_count:
                 self.winner = "white"
             else:
                 self.winner = None  # 引き分け
-            self.save()
+
+            self.save()  # 結果を保存
             print(f"Game over. Winner: {self.winner}")
         else:
             print("Game not over yet.")
-
 
 
     def place_disc(self, x, y):

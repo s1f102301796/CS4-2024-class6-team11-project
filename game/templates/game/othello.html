@@ -3,24 +3,12 @@
 {% block title %}Othello Game{% endblock %}
 
 {% block content %}
-<h1>Othello Game</h1>
 
-<div id="othello-board"></div> <!-- JavaScriptがボードを描画 -->
 <p><span id="current-turn"></span></p>
-
-{% if winner %}
-    <div id="winner-announcement">
-        <h2>Game Over!</h2>
-        {% if winner == "black" %}
-            <p>Winner: Black</p>
-        {% elif winner == "white" %}
-            <p>Winner: White</p>
-        {% else %}
-            <p>It's a draw!</p>
-        {% endif %}
-        <button onclick="location.reload()">Play Again</button>
-    </div>
-{% endif %}
+<div id="winner"></div>
+<div id="othello-board-background">
+<div id="othello-board"></div> <!-- JavaScriptがボードを描画 -->
+</div>
 
 <script src="{% static 'game/js/othello.js' %}"></script>
 {% endblock %}
