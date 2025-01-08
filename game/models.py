@@ -1,6 +1,7 @@
 from django.db import models
 
 
+# オセロクラス
 class Othello(models.Model):
     # 8x8のボード状態をJSONで管理
     board = models.JSONField(default=list)
@@ -21,6 +22,8 @@ class Othello(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    placeable_positions = models.JSONField(default=list)
+
     # オセロの移動方向リスト（共通化）
     DIRECTIONS = [
         (-1, 0), (1, 0), (0, -1), (0, 1),
@@ -33,6 +36,8 @@ class Othello(models.Model):
         self.board[3][3] = self.board[4][4] = "white"
         self.board[3][4] = self.board[4][3] = "black"
         self.current_turn = "black"
+        self.placeable_positions = []
+        self.get_placeable_positions()
         self.winner = None  # 勝者データもリセット
         self.save()
 
@@ -61,6 +66,18 @@ class Othello(models.Model):
                 return True
 
         return False
+    
+
+    def get_placeable_positions(self):
+        positions = []
+        self.placeable_positions.clear()
+        for row in range(8):
+            for col in range(8):
+                if self.can_place(row, col):
+                    positions.append((row, col))
+
+        self.placeable_positions = positions
+        return True
 
 
     def flip_discs(self, x, y):
@@ -85,21 +102,16 @@ class Othello(models.Model):
 
 
     def switch_turn(self):
-        # 現在のプレイヤーのターンを切り替える
         self.current_turn = "white" if self.current_turn == "black" else "black"
-
-        # 次のプレイヤーが駒を置けない場合、さらにターンを切り替える
         if not self.can_any_player_move():
             print(f"No valid moves for {self.current_turn}. Switching turn again.")
             self.current_turn = "white" if self.current_turn == "black" else "black"
-
-            # 両プレイヤーが置けない場合はゲーム終了
             if not self.can_any_player_move():
                 print("No valid moves for both players. Ending the game.")
                 self.check_game_over()
-                return
-        
-        print(f"Next turn: {self.current_turn}") # デバッグ用
+        self.save()  # 状態を保存
+        print(f"DEBUG: Turn switched to: {self.current_turn}")
+
 
 
     def can_any_player_move(self):
@@ -122,16 +134,7 @@ class Othello(models.Model):
         )
         self.current_turn = original_turn  # 元のターンに戻す
         return can_move
-    
 
-    def get_placeable_positions(self):
-        # 設置可能なマスのリストを返す [(x, y), ...] の形式
-        placeable_positions = []
-        for x in range(8):
-            for y in range(8):
-                if self.can_place(x, y):
-                    placeable_positions.append((x, y))
-        return placeable_positions
 
 
     def check_game_over(self):

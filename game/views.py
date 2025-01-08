@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.http import JsonResponse
 from .models import Othello
 import json
@@ -25,6 +26,7 @@ def othello_game(request):
         'current_turn': current_turn,
     })
 
+@csrf_exempt 
 def place_disc(request, row, col):
     game = get_object_or_404(Othello, id=1)
     row, col = int(row), int(col)
@@ -41,12 +43,13 @@ def place_disc(request, row, col):
         'current_turn': game.current_turn
     })
 
+@ensure_csrf_cookie
 def get_board(request):
     # 最新のゲームデータを取得
     game = Othello.objects.latest('created_at')
     placeable_positions = game.get_placeable_positions()
     # None を null に変換
-    board = [[cell if cell is not None else None for cell in row] for row in game.board]
+    board = [[cell if cell in ["black", "white"] else None for cell in row] for row in game.board]
     return JsonResponse({'board': board, 'current_turn': game.current_turn, "placeable_positions": placeable_positions,'winner': game.winner})
 
 def othello_game_view(request, game_id):

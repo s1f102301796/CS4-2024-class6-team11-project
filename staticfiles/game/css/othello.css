@@ -1,0 +1,85 @@
+/* オセロ盤全体のスタイル */
+#othello-board table {
+    border-collapse: collapse;
+    margin: 20px auto;
+    padding-top: 10px;
+    background-color: #007200; /* オセロらしい濃い緑 */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* 立体感 */
+}
+
+#othello-board td {
+    width: 60px; /* セルの大きさを拡大 */
+    height: 60px;
+    border: 3px solid #003300; /* より濃い枠線 */
+    border-radius: 10%;
+    position: relative; /* 子要素の絶対配置用 */
+    text-align: center;
+}
+
+/* 駒（白・黒）のデザイン */
+#othello-board .cell.black::before,
+#othello-board .cell.white::before {
+    content: "";
+    width: 80%; /* 駒のサイズ */
+    height: 80%;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.5);
+}
+
+#othello-board .cell.black::before {
+    background-color: black;
+    box-shadow: 0px 2px white;
+}
+
+#othello-board .cell.white::before {
+    background-color: white;
+    box-shadow: 0px 3px black;
+}
+
+#othello-board-background {
+    width: 560px;
+    height: 560px;
+    background-color: black;
+    border-radius: 5%;
+    margin: auto;
+    padding: 1px;
+    box-shadow: inset 0px -2px 5px rgba(106, 106, 106, 1);
+}
+
+/* 設置可能なマスのスタイル */
+.cell.placeable::after {
+    content: "";
+    width: 30%;
+    height: 30%;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.4); /* 半透明の円 */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none; /* クリックイベントを透過 */
+}
+
+/* クリック可能を示す */
+#othello-board .cell {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#othello-board .cell:hover {
+    background-color: #009900; /* ホバー時のセルの色 */
+}
+
+/* 勝者発表セクション */
+#winner {
+    font-size: 24px;
+    font-weight: bold;
+    color: red;
+    text-align: center;
+    margin: 20px 0;
+}
+
