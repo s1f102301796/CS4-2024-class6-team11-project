@@ -178,6 +178,10 @@ class Othello(models.Model):
 
         self.flip_discs(x, y)
         self.switch_turn()
+        self.get_placeable_positions()
+        if not self.placeable_positions:
+            self.switch_turn()
+            self.get_placeable_positions()
         self.save()  # 状態を保存
         return "Disc placed successfully."
 
