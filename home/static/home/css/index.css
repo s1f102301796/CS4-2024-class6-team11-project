@@ -1,10 +1,3 @@
-<<<<<<< Updated upstream
-.game_nav{
-    border-color: black;
-    border-style:solid;
-    border-radius: 1%;
-    border-width:1px;
-=======
 body{
     background-color: #222222;
 }
@@ -24,7 +17,7 @@ div {
     text-align: center;
 }
 
-.btn01 a{
+.game_nav a{
 	background-color: #ceb849;
 	border: 1px solid #ceb849;
 	border-radius: 35px;
@@ -32,12 +25,12 @@ div {
     text-decoration: none;
 }
 
-.btn01 a:hover {
+.game_nav a:hover {
 	background-color: #B99b00;
 	border: 1px solid #333;
 }
 
-.btn01 a::before {
+.game_nav a::before {
 	content: '';
 	position: absolute;
 	top: calc(50% - 5px);
@@ -48,7 +41,7 @@ div {
 	background-color: #333;
 }
 
-.btn01 a::after {
+.game_nav a::after {
 	content: '';
 	position: absolute;
 	top: 50%;
@@ -57,5 +50,4 @@ div {
 	width: 70px;
 	height: 1px;
 	background-color: #333;
->>>>>>> Stashed changes
 }
