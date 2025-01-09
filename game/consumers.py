@@ -37,11 +37,6 @@ class OthelloConsumer(AsyncWebsocketConsumer):
         # 初期ボード状態を送信
         from .models import Othello
         othello_game = await sync_to_async(Othello.objects.get)()
-        
-        # デバッグ: 初期状態の確認
-        print(f"Initial board: {othello_game.board}")
-        print(f"Initial current turn: {othello_game.current_turn}")
-        print(f"Initial placeable positions: {othello_game.placeable_positions}")
 
         await self.send(text_data=json.dumps({
             "type": "update",
@@ -62,8 +57,6 @@ class OthelloConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         action = data.get("type")
 
-        print(f"Received data from client: {data}")
-
         if action == "place_disc":
             row = data.get("row")
             col = data.get("col")
@@ -81,10 +74,6 @@ class OthelloConsumer(AsyncWebsocketConsumer):
 
             # 駒を置く処理
             success_message = await sync_to_async(othello_game.place_disc)(row, col)
-
-            print(f"Board after move: {othello_game.board}")
-            print(f"Next turn: {othello_game.current_turn}")
-            print(f"Placeable positions after move: {othello_game.placeable_positions}")
 
             # 状態更新を全クライアントに通知
             await self.channel_layer.group_send(

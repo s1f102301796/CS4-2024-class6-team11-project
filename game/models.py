@@ -110,12 +110,10 @@ class Othello(models.Model):
                 print("No valid moves for both players. Ending the game.")
                 self.check_game_over()
         self.save()  # 状態を保存
-        print(f"DEBUG: Turn switched to: {self.current_turn}")
 
 
 
     def can_any_player_move(self):
-        # 現在のターンで駒を置ける位置があるか確認
         for x in range(8):
             for y in range(8):
                 if self.can_place(x, y):
@@ -126,40 +124,35 @@ class Othello(models.Model):
     
 
     def can_any_player_move_for(self, player_color):
-        # 現在のターンを一時的に指定のプレイヤーに変更して判定
         original_turn = self.current_turn
         self.current_turn = player_color
         can_move = any(
             self.can_place(row, col) for row in range(8) for col in range(8)
         )
-        self.current_turn = original_turn  # 元のターンに戻す
+        self.current_turn = original_turn
         return can_move
 
 
 
     def check_game_over(self):
-        # 黒と白の駒の数をカウント
         black_count = sum(row.count("black") for row in self.board)
         white_count = sum(row.count("white") for row in self.board)
 
         print(f"Black count: {black_count}, White count: {white_count}")
 
-        # すべてのマスが埋まった場合
         board_full = black_count + white_count == 64
 
-        # 両プレイヤーが駒を置けない場合
         no_moves_for_black = not self.can_any_player_move_for("black")
         no_moves_for_white = not self.can_any_player_move_for("white")
         both_cannot_move = no_moves_for_black and no_moves_for_white
 
-        # 終了条件
         if board_full or both_cannot_move:
             if black_count > white_count:
                 self.winner = "black"
             elif white_count > black_count:
                 self.winner = "white"
             else:
-                self.winner = None  # 引き分け
+                self.winner = "draw"
 
             self.save()  # 結果を保存
             print(f"Game over. Winner: {self.winner}")
@@ -182,6 +175,7 @@ class Othello(models.Model):
         if not self.placeable_positions:
             self.switch_turn()
             self.get_placeable_positions()
+        self.check_game_over()
         self.save()  # 状態を保存
         return "Disc placed successfully."
 

@@ -18,9 +18,6 @@ def othello_game(request):
     board = game.board
     current_turn = 'Black' if game.current_turn == 'black' else 'White'
 
-    # デバッグ用
-    print("Board data passed to template:", board)
-
     return render(request, 'game/othello.html', {
         'board': board,
         'current_turn': current_turn,
@@ -39,7 +36,7 @@ def place_disc(request, row, col):
     return JsonResponse({
         'success': success,
         'message': result,
-        'board': game.board,  # 必要なら更新後のボードも返す
+        'board': game.board,
         'current_turn': game.current_turn
     })
 

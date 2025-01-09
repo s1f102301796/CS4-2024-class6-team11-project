@@ -20,12 +20,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (data.type === "player_color") {
                 playerColor = data.player_color;
-                updatePlayerColor(playerColor); // プレイヤー色をUIに表示
+                updatePlayerColor(playerColor);
             }
 
             if (data.type === "update") {
-                updateBoard(data.board, data.placeable_positions);
-                updateCurrentTurn(data.current_turn);
+                if (data.winner) {
+                    winnerElement.textContent = `Player ${data.winner} WIN!`
+                }
+                else {
+                    updateBoard(data.board, data.placeable_positions);
+                    updateCurrentTurn(data.current_turn);
+                }
             }
 
             if (data.type === "error") {
