@@ -1,8 +1,24 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 
 # オセロクラス
 class Othello(models.Model):
+    player_black = models.ForeignKey(
+        get_user_model(),
+        related_name="games_as_black",
+        on_delete=models.CASCADE,
+        default=1
+    )
+    player_white = models.ForeignKey(
+        get_user_model(),
+        related_name="games_as_white",
+        on_delete=models.CASCADE,
+        default=1
+    )
+
+    black_score = models.IntegerField(default=0)
+    white_score = models.IntegerField(default=0)
     # 8x8のボード状態をJSONで管理
     board = models.JSONField(default=list)
     # 現在のターン
@@ -147,17 +163,31 @@ class Othello(models.Model):
         both_cannot_move = no_moves_for_black and no_moves_for_white
 
         if board_full or both_cannot_move:
+            self.black_score = black_count
+            self.white_score = white_count
+
             if black_count > white_count:
                 self.winner = "black"
+                self.player_black.games_won += 1  # 黒プレイヤーの勝利数を更新
             elif white_count > black_count:
                 self.winner = "white"
+                self.player_white.games_won += 1  # 白プレイヤーの勝利数を更新
             else:
                 self.winner = "draw"
 
-            self.save()  # 結果を保存
+            # プレイヤーの総試合数を更新
+            self.player_black.games_played += 1
+            self.player_white.games_played += 1
+
+            # 保存
+            self.player_black.save()
+            self.player_white.save()
+            self.save()
+
             print(f"Game over. Winner: {self.winner}")
         else:
             print("Game not over yet.")
+
 
 
     def place_disc(self, x, y):

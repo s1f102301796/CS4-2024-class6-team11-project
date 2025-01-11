@@ -1,7 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 import json
-import random
 
 class OthelloConsumer(AsyncWebsocketConsumer):
     players = {}  # プレイヤーごとの色を管理
@@ -62,6 +61,7 @@ class OthelloConsumer(AsyncWebsocketConsumer):
             col = data.get("col")
 
             from .models import Othello
+            from django.contrib.auth.models import User
             othello_game = await sync_to_async(Othello.objects.first)()
 
             # プレイヤーの色が現在のターンと一致するかを確認
@@ -75,6 +75,15 @@ class OthelloConsumer(AsyncWebsocketConsumer):
             # 駒を置く処理
             success_message = await sync_to_async(othello_game.place_disc)(row, col)
 
+            opponent_user = (
+            await sync_to_async(lambda: othello_game.player_white if self.player_color == "black" else othello_game.player_black))()
+
+            opponent_info = {
+            "username": opponent_user.username,
+            "profile_image": opponent_user.profile_image.url if opponent_user.profile_image else None,
+            "win_rate": opponent_user.win_rate,
+            }
+
             # 状態更新を全クライアントに通知
             await self.channel_layer.group_send(
                 self.room_group_name,
@@ -84,6 +93,7 @@ class OthelloConsumer(AsyncWebsocketConsumer):
                     "current_turn": othello_game.current_turn,
                     "winner": othello_game.winner,
                     "placeable_positions": othello_game.placeable_positions,
+                    "opponent": opponent_info,
                 }
             )
 
@@ -96,4 +106,5 @@ class OthelloConsumer(AsyncWebsocketConsumer):
             "current_turn": event["current_turn"],
             "winner": event["winner"],
             "placeable_positions": event["placeable_positions"],
+            "opponent": event["opponent"],
         }))

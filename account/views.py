@@ -1,12 +1,8 @@
-from django.shortcuts import render, redirect
+from django.views.generic.edit import CreateView
+from django.urls import reverse_lazy
 from .forms import CustomUserCreationForm
 
-def register(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('login')  # ログイン画面にリダイレクト
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'account/register.html', {'form': form})
+class SignUpView(CreateView):
+    form_class = CustomUserCreationForm
+    success_url = reverse_lazy('login')
+    template_name = 'account/signup.html'
