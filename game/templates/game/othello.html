@@ -3,14 +3,26 @@
 {% block title %}Othello Game{% endblock %}
 
 {% block content %}
+<script>
+    const roomName = "{{ room_name|escapejs }}";  // Djangoテンプレートからルーム名を取得
+</script>
 
-<p><span id="current-turn"></span></p>
 <div id="player-info">
-    <p id="player-color">Your Color: </p>
+    <p><strong>Black:</strong> {{ player_black.username }} (Win Rate: {{ player_black.win_rate }}%)</p>
+    <p><strong>White:</strong> {{ player_white.username }} (Win Rate: {{ player_white.win_rate }}%)</p>
+    <p><strong>Your Color:</strong> {{ current_user.username }}</p>
 </div>
-<div id="winner"></div>
+
+<p id="current-turn"><strong>Current Turn:</strong> {{ current_turn }}</p>
+
+<div id="winner">
+    {% if winner %}
+        <p><strong>Winner:</strong> {{ winner }}</p>
+    {% endif %}
+</div>
+
 <div id="othello-board-background">
-<div id="othello-board"></div> <!-- JavaScriptがボードを描画 -->
+    <div id="othello-board"></div> <!-- JavaScriptがボードを描画 -->
 </div>
 
 <script src="{% static 'game/js/othello.js' %}"></script>

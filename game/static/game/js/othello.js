@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentTurnElement = document.getElementById("current-turn");
     const winnerElement = document.getElementById("winner");
     const playerColorElement = document.getElementById("player-color");
-    const roomName = "default_room";
 
     let gameSocket = null;
     let playerColor = null;
@@ -26,8 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.type === "update") {
                 if (data.winner) {
                     winnerElement.textContent = `Player ${data.winner} WIN!`
-                }
-                else {
+                } else {
                     updateBoard(data.board, data.placeable_positions);
                     updateCurrentTurn(data.current_turn);
                 }

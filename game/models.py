@@ -1,43 +1,52 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
+User = get_user_model()
+
+class MatchmakingQueue(models.Model):
+    user = models.OneToOneField(
+        get_user_model(), on_delete=models.CASCADE, related_name="queue"
+    )
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} joined at {self.joined_at}"
+
 
 # オセロクラス
 class Othello(models.Model):
+    room_name = models.CharField(max_length=255, unique=True)
     player_black = models.ForeignKey(
-        get_user_model(),
+        User,
         related_name="games_as_black",
         on_delete=models.CASCADE,
-        default=1
+        null=True,  # 試合中の空席を許可
+        blank=True
     )
     player_white = models.ForeignKey(
-        get_user_model(),
+        User,
         related_name="games_as_white",
         on_delete=models.CASCADE,
-        default=1
+        null=True,
+        blank=True
     )
 
     black_score = models.IntegerField(default=0)
     white_score = models.IntegerField(default=0)
-    # 8x8のボード状態をJSONで管理
     board = models.JSONField(default=list)
-    # 現在のターン
     current_turn = models.CharField(
         max_length=5,
         choices=[("black", "Black"), ("white", "White")],
         default="black",
     )
-    # 勝者
     winner = models.CharField(
         max_length=5,
-        choices=[("black", "Black"), ("white", "White")],
+        choices=[("black", "Black"), ("white", "White"), ("draw", "Draw")],
         null=True,
         blank=True,
     )
-    # 作成・更新日時
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     placeable_positions = models.JSONField(default=list)
 
     # オセロの移動方向リスト（共通化）
@@ -150,12 +159,27 @@ class Othello(models.Model):
 
 
 
+    def update_player_stats(self):
+        """プレイヤーの統計情報を更新する"""
+        if self.player_black:
+            self.player_black.games_played += 1
+        if self.player_white:
+            self.player_white.games_played += 1
+
+        if self.winner == "black" and self.player_black:
+            self.player_black.games_won += 1
+        elif self.winner == "white" and self.player_white:
+            self.player_white.games_won += 1
+
+        if self.player_black:
+            self.player_black.save()
+        if self.player_white:
+            self.player_white.save()
+
+
     def check_game_over(self):
         black_count = sum(row.count("black") for row in self.board)
         white_count = sum(row.count("white") for row in self.board)
-
-        print(f"Black count: {black_count}, White count: {white_count}")
-
         board_full = black_count + white_count == 64
 
         no_moves_for_black = not self.can_any_player_move_for("black")
@@ -168,22 +192,13 @@ class Othello(models.Model):
 
             if black_count > white_count:
                 self.winner = "black"
-                self.player_black.games_won += 1  # 黒プレイヤーの勝利数を更新
             elif white_count > black_count:
                 self.winner = "white"
-                self.player_white.games_won += 1  # 白プレイヤーの勝利数を更新
             else:
                 self.winner = "draw"
 
-            # プレイヤーの総試合数を更新
-            self.player_black.games_played += 1
-            self.player_white.games_played += 1
-
-            # 保存
-            self.player_black.save()
-            self.player_white.save()
+            self.update_player_stats()  # プレイヤー情報を更新
             self.save()
-
             print(f"Game over. Winner: {self.winner}")
         else:
             print("Game not over yet.")

@@ -9,15 +9,28 @@ class OthelloConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"game_{self.room_name}"
 
+        from .models import Othello
+        self.othello_game, created = await sync_to_async(Othello.objects.get_or_create)(room_name=self.room_name)
+        
+        # 新しいゲームの場合は初期化
+        if created:
+            await sync_to_async(self.othello_game.initialize_board)()
+
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
         # プレイヤーの色を割り当て
         if len(self.players) == 0:
             self.players[self.channel_name] = "black"
+            # 黒プレイヤーの設定
+            await sync_to_async(setattr)(self.othello_game, 'player_black', self.scope["user"])
+            await sync_to_async(self.othello_game.save)()
         elif len(self.players) == 1:
             existing_color = list(self.players.values())[0]
             self.players[self.channel_name] = "white" if existing_color == "black" else "black"
+            # 白プレイヤーの設定
+            await sync_to_async(setattr)(self.othello_game, 'player_white', self.scope["user"])
+            await sync_to_async(self.othello_game.save)()
         else:
             # 2人以上接続できないようにする
             await self.close()
@@ -33,9 +46,8 @@ class OthelloConsumer(AsyncWebsocketConsumer):
 
         print(f"WebSocket connected: {self.channel_name}, Color: {self.player_color}")
 
-        # 初期ボード状態を送信
-        from .models import Othello
-        othello_game = await sync_to_async(Othello.objects.get)()
+        # 初期ボード状態を送信（room_nameを指定して取得）
+        othello_game = await sync_to_async(Othello.objects.get)(room_name=self.room_name)
 
         await self.send(text_data=json.dumps({
             "type": "update",
@@ -62,7 +74,7 @@ class OthelloConsumer(AsyncWebsocketConsumer):
 
             from .models import Othello
             from django.contrib.auth.models import User
-            othello_game = await sync_to_async(Othello.objects.first)()
+            othello_game = await sync_to_async(Othello.objects.get)(room_name=self.room_name)
 
             # プレイヤーの色が現在のターンと一致するかを確認
             if self.player_color != othello_game.current_turn:
@@ -75,13 +87,18 @@ class OthelloConsumer(AsyncWebsocketConsumer):
             # 駒を置く処理
             success_message = await sync_to_async(othello_game.place_disc)(row, col)
 
-            opponent_user = (
-            await sync_to_async(lambda: othello_game.player_white if self.player_color == "black" else othello_game.player_black))()
+            # 対戦相手の情報を取得
+            async def get_opponent_user():
+                if self.player_color == "black":
+                    return await sync_to_async(lambda: othello_game.player_white)()
+                else:
+                    return await sync_to_async(lambda: othello_game.player_black)()
+
+            opponent_user = await get_opponent_user()
 
             opponent_info = {
-            "username": opponent_user.username,
-            "profile_image": opponent_user.profile_image.url if opponent_user.profile_image else None,
-            "win_rate": opponent_user.win_rate,
+                "username": await sync_to_async(lambda: opponent_user.username)(),
+                "win_rate": await sync_to_async(lambda: opponent_user.win_rate)()
             }
 
             # 状態更新を全クライアントに通知

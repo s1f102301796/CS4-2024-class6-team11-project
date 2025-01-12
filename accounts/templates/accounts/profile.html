@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile</title>
+</head>
+<body>
+    <h2>Welcome, {{ user.username }}</h2>
+    <p>Games Played: {{ user.games_played }}</p>
+    <p>Games Won: {{ user.games_won }}</p>
+    <p>Win Rate: {{ user.win_rate }}%</p>
+    <a href="{% url 'logout' %}">Logout</a>
+</body>
+</html>

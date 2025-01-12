@@ -1,18 +1,60 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Othello - Menu</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>Othello Lobby</title>
 </head>
 <body>
-    <div class="menu-container">
-        <h1>Othello</h1>
-        <p>Welcome to the Othello game! Click the button below to start.</p>
-        <a href="{% url 'othello_game' %}" class="btn">Start Game</a>
-    </div>
+    <h1>Othello Lobby</h1>
+
+    <!-- ランダムマッチング用セクション -->
+    <section>
+        <h2>Join Random Match</h2>
+        <button id="join-queue-btn">Join Matchmaking Queue</button>
+        <div id="queue-status" style="display: none;">Waiting for players...</div>
+    </section>
+
+    <!-- 手動で部屋名を指定するセクション -->
+    <section>
+        <h2>Join Specific Room</h2>
+        <form id="room-form">
+            <label for="room-name">Enter Room Name:</label>
+            <input type="text" id="room-name" required>
+            <button type="submit">Join Room</button>
+        </form>
+    </section>
+
+    <script>
+        // ランダムマッチング用スクリプト
+        const joinQueueButton = document.getElementById("join-queue-btn");
+        const queueStatus = document.getElementById("queue-status");
+
+        joinQueueButton.addEventListener("click", () => {
+            queueStatus.style.display = "block"; // 状態を表示
+            fetch('/game/join_queue/') // サーバーにランダムマッチングのリクエストを送信
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = `/game/${data.room_name}/`; // 自動生成された部屋に移動
+                    } else {
+                        queueStatus.textContent = "Error: Unable to join matchmaking queue.";
+                    }
+                })
+                .catch(error => {
+                    queueStatus.textContent = "Error: Unable to connect to the server.";
+                });
+        });
+
+        // 指定部屋参加用スクリプト
+        document.getElementById("room-form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const roomName = document.getElementById("room-name").value.trim();
+            if (roomName) {
+                window.location.href = `/game/${roomName}/`;
+            }
+        });
+    </script>
 </body>
 </html>
 
