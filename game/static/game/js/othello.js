@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentTurnElement = document.getElementById("current-turn");
     const winnerElement = document.getElementById("winner");
     const playerColorElement = document.getElementById("player-color");
-    const roomName = "default_room";
+    const roomName = JSON.parse();
 
     let gameSocket = null;
     let playerColor = null;
