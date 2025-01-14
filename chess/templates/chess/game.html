@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chess Game</title>
+
+    <!-- jQueryの読み込み -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- chessboard.jsのCSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+
+    <!-- chess.jsの読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <style>
+        #board {
+            width: 400px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chess Game</h1>
+    <div id="board"></div>
+    <div id="status"></div>
+
+    <!-- chessboard.jsの読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
+    <script>
+        // Chessboard.jsの初期化
+        const board = Chessboard('board', {
+            draggable: true,
+            dropOffBoard: 'snapback',
+            position: 'start',
+            onDrop: onDrop,
+        });
+
+        // WebSocketの設定
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/chess/');
+
+        // サーバーからのメッセージを処理
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.error) {
+                document.getElementById('status').innerText = data.error;
+                return;
+            }
+
+            if (data.fen) {
+                board.position(data.fen);  // FENを使って盤面を更新
+            }
+        };
+
+        // 駒の移動イベント
+        function onDrop(source, target) {
+            const move = source + target;
+
+            // WebSocketを通じてバックエンドに送信
+            socket.send(JSON.stringify({ move: move }));
+        }
+    </script>
+</body>
+</html>
