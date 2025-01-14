@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'game',
-    'chess',
+    'chess_app',
     'home',
 ]
 
@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -123,12 +124,18 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# アプリごとの静的ファイルのパス（必要に応じて）
+STATICFILES_DIRS = [
+    BASE_DIR / "chess/static",  # chess アプリの静的ファイルフォルダ
+]
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ASGI_APPLICATION = 'your_project_name.asgi.application'
+ASGI_APPLICATION = 'config.routing.application'
 
 # Channelsのバックエンド設定（簡易的なInMemoryLayerを使用）
 CHANNEL_LAYERS = {
