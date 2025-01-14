@@ -3,13 +3,10 @@
 <head>
     <title>Chess Game</title>
 
-    <!-- jQueryの読み込み -->
+    <!-- 必要なCSSとJSを読み込み -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- chessboard.jsのCSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
-
-    <!-- chess.jsの読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
     <style>
@@ -24,42 +21,60 @@
     <div id="board"></div>
     <div id="status"></div>
 
-    <!-- chessboard.jsの読み込み -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
-
     <script>
-        // Chessboard.jsの初期化
+        // Chess.js のインスタンスを作成
+        const game = new Chess();
+
+        // Chessboard.js の初期化
         const board = Chessboard('board', {
             draggable: true,
             dropOffBoard: 'snapback',
             position: 'start',
-            onDrop: onDrop,
+            pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png', // 駒画像のパス
+            onDrop: onDrop, // 駒を移動したときの処理
         });
 
-        // WebSocketの設定
-        const socket = new WebSocket('ws://' + window.location.host + '/ws/chess/');
-
-        // サーバーからのメッセージを処理
-        socket.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-
-            if (data.error) {
-                document.getElementById('status').innerText = data.error;
-                return;
-            }
-
-            if (data.fen) {
-                board.position(data.fen);  // FENを使って盤面を更新
-            }
-        };
-
-        // 駒の移動イベント
+        // 駒を移動した際の処理
         function onDrop(source, target) {
-            const move = source + target;
+            // 移動を chess.js に適用
+            const move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q' // ポーンが最終列に到達した場合の昇格（デフォルトでクイーン）
+            });
 
-            // WebSocketを通じてバックエンドに送信
-            socket.send(JSON.stringify({ move: move }));
+            // 非合法な手の場合はスナップバック
+            if (move === null) return 'snapback';
+
+            // 移動を反映したら、更新されたゲームの状態を表示
+            updateStatus();
         }
+
+        // 状態を更新する関数
+        function updateStatus() {
+            let status = '';
+
+            if (game.in_checkmate()) {
+                // チェックメイトの判定
+                status = 'Checkmate!';
+            } else if (game.in_draw()) {
+                // 引き分けの判定
+                status = 'Draw!';
+            } else {
+                const moveColor = game.turn() === 'w' ? 'White' : 'Black';
+                status = moveColor + "'s turn";
+
+                if (game.in_check()) {
+                    // チェック状態の判定
+                    status += ', in check';
+                }
+            }
+
+            document.getElementById('status').innerText = status;
+        }
+
+        // 初期状態の更新
+        updateStatus();
     </script>
 </body>
 </html>
