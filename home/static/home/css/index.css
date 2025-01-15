@@ -1,63 +1,127 @@
-body{
-    background-color: #222222;
+/* ベースのスタイル */
+body {
+    background-color: #1e1e1e; /* 暗めの背景 */
+    color: #e0e0e0; /* 落ち着いた明るさの文字色 */
+    font-family: 'Arial', sans-serif; /* 読みやすいフォント */
+    margin: 0;
+    padding: 0;
 }
 
-h1{
-    margin: 15px 30px 15px 30px;
-    color: #ffffff;
-    font-family: serif;
+/* ヘッダー */
+h1 {
+    margin: 20px 80px 20px 80px;
+    color: #f4d03f; /* ゴールドカラー */
+    font-family: 'Georgia', serif; /* 高級感のあるフォント */
     font-style: italic;
     font-weight: bold;
     text-align: center;
-    text-shadow: 3px 3px 3px #333333;
-    background-color: #006400;
+    text-shadow: 4px 4px 6px rgba(0, 0, 0, 0.5); /* 立体感のある影 */
+    background-color: #2e8b57;
+    padding: 20px;
+    border-radius: 10px;
 }
 
+/* 中央揃えのデザイン */
 div {
     text-align: center;
 }
 
-.game_nav a{
-	background-color: #ceb849;
-	border: 1px solid #ceb849;
-	border-radius: 35px;
-    color: black;
+/* リスト全体のスタイル */
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 20px auto;
+    width: fit-content; /* 必要な幅だけ使用 */
+}
+
+/* リスト項目 */
+li {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-weight: bold;
+    background-color: #2e8b57; /* 渋めの緑 */
+    color: #f4f4f4;
+    padding: 15px 20px;
+    margin: 10px 0;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    text-align: center;
+}
+
+li:hover {
+    background-color: #3b9f70; /* 明るめの緑 */
+}
+
+/* ゲーム一覧のスタイル */
+.game_nav p {
+    font-family: 'Georgia', serif; /* 上品でおしゃれなフォント */
+    font-size: 24px; /* 見やすいサイズ */
+    font-weight: bold; /* 太字で目立たせる */
+    color: #f4d03f; /* ゴールドカラー */
+    text-align: center; /* 中央揃え */
+    text-transform: uppercase; /* 全て大文字に変換 */
+    letter-spacing: 2px; /* 文字間隔を調整して洗練された印象に */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 立体感のある影 */
+    background: linear-gradient(90deg, #8f6e0c, #f4d03f); /* 横方向のグラデーション */
+    -webkit-background-clip: text; /* テキストに背景クリップを適用 */
+    -webkit-text-fill-color: transparent; /* テキストを透明にして背景を表示 */
+    margin-bottom: 20px; /* 下部に余白を追加 */
+}
+
+/* リンクボタン */
+.game_nav a {
+    display: inline-block;
+    background-color: #f4d03f; /* ゴールド */
+    border: 2px solid #b88d10; /* 落ち着いたゴールドの枠線 */
+    border-radius: 30px;
+    color: #1e1e1e; /* ダークグレーの文字色 */
+    font-weight: bold;
+    padding: 10px 20px; /* 十分なパディングを確保 */
     text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative; /* 矢印の配置を調整 */
+    overflow: visible; /* ボタンの外側にはみ出すデザインを許可 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* 立体感を追加 */
 }
 
-.game_nav a:hover {
-	background-color: #B99b00;
-	border: 1px solid #333;
-}
-
+/* 矢印のスタイル（ボタン外に配置しつつ丸みに調和） */
 .game_nav a::before {
-	content: '';
-	position: absolute;
-	top: calc(50% - 5px);
-	right: -35px;
-	transform: rotate(30deg);
-	width: 12px;
-	height: 1px;
-	background-color: #333;
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid #8f6e0c;
+    border-right: 2px solid #8f6e0c;
+    transform: rotate(45deg);
+    top: 50%;
+    right: -20px; /* ボタンの外側に配置 */
+    transform: translateY(-50%) rotate(45deg);
+    border-radius: 50%; /* 丸みを帯びた矢印 */
 }
 
 .game_nav a::after {
-	content: '';
-	position: absolute;
-	top: 50%;
-	right: -35px;
-	transform: translateY(-50%);
-	width: 70px;
-	height: 1px;
-	background-color: #333;
+    content: '';
+    position: absolute;
+    width: 50px;
+    height: 2px;
+    background-color: #8f6e0c;
+    top: 50%;
+    right: -30px; /* ボタンの外側に配置 */
+    transform: translateY(-50%);
+    border-radius: 5px; /* 線に軽い丸みを追加 */
 }
 
-ul{
-	list-style: none;
-	padding: 0;
-	margin: 0;
+/* ホバー時のエフェクト */
+.game_nav a:hover {
+    background-color: #e5be22; /* ゴールドの濃い色 */
+    border-color: #8f6e0c;
+    color: #1e1e1e;
+    transform: translateY(-2px); /* 浮き上がり効果 */
 }
 
-p{
-	color: #ffffff;
+.game_nav a:hover::before,
+.game_nav a:hover::after {
+    background-color: #6e4f08; /* より濃いアクセント色 */
+    border-color: #6e4f08;
+    transform: translateY(-50%) scale(1.1); /* ホバー時に軽く拡大 */
 }
