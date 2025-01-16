@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chess Game</title>
+    {% load static %}
+
+    <!-- Google Fonts: Cinzel -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- jQuery, Chess.js, Chessboard.js -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
+    <style>
+        /* Cinzelフォントを全体に適用してチェスっぽい雰囲気に */
+        body {
+            font-family: 'Cinzel', serif;
+            background-color: #f9f9f9;
+        }
+        h1, #status, #myColorDisplay {
+            text-align: center;
+            margin-top: 10px;
+            color: #333;
+        }
+
+        #board {
+            width: 400px;
+            margin: 20px auto;
+        }
+
+        #log {
+            margin: 20px auto;
+            width: 400px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 200px;
+            overflow-y: scroll;
+            background-color: #fff;
+        }
+
+        .game-over {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chess Game</h1>
+
+    <!-- 自分が白か黒かを表示 -->
+    <div id="myColorDisplay"></div>
+
+    <!-- チェス盤 -->
+    <div id="board"></div>
+
+    <!-- ステータス表示 -->
+    <div id="status"></div>
+
+    <!-- ログ表示 -->
+    <div id="log"></div>
+
+    <script>
+        // --- ローカルのChess.js (UI用) ---
+        const game = new Chess();
+
+        // --- 自分の色 ("white" or "black") & 現在の手番 ---
+        let myColor = null;
+        let currentTurn = null;
+
+        // --- 勝者やゲームオーバーをフラグ管理 ---
+        let isGameOver = false;
+
+        // --- 駒画像のパス (static配下) ---
+        const pieceThemePath = "{% static 'img/chesspieces/wikipedia/' %}{piece}.png";
+
+        // --- チェスボード初期化 ---
+        const board = Chessboard('board', {
+            draggable: true,
+            dropOffBoard: 'snapback',
+            position: 'start',
+            pieceTheme: pieceThemePath,
+            onDrop: onDrop,
+        });
+
+        // --- WebSocket接続 ---
+        const socketUrl = 'ws://' + window.location.host + '/ws/chess_app/';
+        const socket = new WebSocket(socketUrl);
+
+        socket.onopen = () => {
+            console.log("WebSocket connected.");
+            updateStatus("Connected to server.");
+        };
+
+        socket.onerror = (e) => {
+            console.error("WebSocket error:", e);
+            updateStatus("WebSocket error occurred.");
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket disconnected.");
+            updateStatus("Disconnected from server.");
+        };
+
+        socket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            console.log("Received:", data);
+
+            if (data.error) {
+                updateStatus(data.error);
+                // スナップバック
+                board.position(game.fen());
+                return;
+            }
+
+            // 初回接続時などに color が送られる
+            if (data.color) {
+                myColor = data.color;
+                showMyColor(myColor);
+            }
+
+            // 現在の手番
+            if (data.turn) {
+                currentTurn = data.turn;
+                if (!isGameOver) {
+                    // ゲームが終わっていない場合はターンを表示
+                    updateStatus("Turn: " + currentTurn);
+                }
+            }
+
+            // 常にFENを更新
+            if (data.fen) {
+                game.load(data.fen);
+                board.position(data.fen);
+            }
+
+            // 移動ログ
+            if (data.move) {
+                appendLog("Move: " + data.move);
+            }
+
+            // サーバー側でCheck / Checkmate / Stalemateを検出した場合は status に入る
+            if (data.status) {
+                // 例えば "Check!", "Checkmate!", "Stalemate! Draw!" など
+                updateStatus(data.status);
+            }
+
+            // 勝者情報 ( "white", "black", "draw", or "" )
+            if (data.winner) {
+                if (data.winner === "white") {
+                    updateStatus("Checkmate! White wins!");
+                    isGameOver = true;
+                } else if (data.winner === "black") {
+                    updateStatus("Checkmate! Black wins!");
+                    isGameOver = true;
+                } else if (data.winner === "draw") {
+                    updateStatus("Draw!");
+                    isGameOver = true;
+                }
+            }
+        };
+
+        // コマを動かしたとき
+        function onDrop(source, target) {
+            // ゲームが終わってるなら動かさない
+            if (isGameOver) {
+                return 'snapback';
+            }
+
+            // フロント側の簡易的ターン判定
+            if (myColor !== currentTurn) {
+                return 'snapback';
+            }
+
+            // ローカルで試す
+            const move = game.move({ from: source, to: target, promotion: 'q' });
+            if (!move) {
+                return 'snapback';
+            }
+
+            // サーバーへ送信
+            const moveUci = source + target;
+            socket.send(JSON.stringify({ move: moveUci }));
+        }
+
+        // 自分が白 or 黒かを表示
+        function showMyColor(color) {
+            const div = document.getElementById('myColorDisplay');
+            if (color === "white") {
+                div.innerText = "You are White";
+            } else {
+                div.innerText = "You are Black";
+            }
+        }
+
+        // ステータス更新
+        function updateStatus(text) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = text;
+        }
+
+        // ログに追記
+        function appendLog(text) {
+            const logElem = document.getElementById('log');
+            const p = document.createElement('p');
+            p.textContent = text;
+            logElem.appendChild(p);
+            logElem.scrollTop = logElem.scrollHeight;
+        }
+    </script>
+</body>
+</html>
