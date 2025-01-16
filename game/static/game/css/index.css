@@ -1,0 +1,218 @@
+@font-face {
+    font-family: "Makinas-4";
+    src: url("../font/Makinas-4-Square.otf") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: "Makinas-4" !important;
+    color: #2c3e50;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.lobby-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 10px solid #2c3e50;
+    background-image: linear-gradient(0deg, transparent calc(100% - 1px), #2c3e50 calc(100% - 1px)),
+                      linear-gradient(90deg, transparent calc(100% - 1px), #2c3e50 calc(100% - 1px));
+    background-size: 13vh 13vh;
+    background-color: #238E75;
+    animation: ani 30s linear infinite;
+    overflow: hidden;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+.main-title {
+    padding-top: 1vh;
+    font-size: clamp(2rem, 6vh, 4rem);
+    font-weight: bold;
+    text-align: center;
+    color: #2c3e50;
+    margin: 0;
+    height: 8vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sub-title {
+    font-size: clamp(1rem, 3vh, 1.5rem);
+    text-align: center;
+    color: #2c3e50;
+    margin: 0;
+    height: 5vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lobby-sections {
+    display: flex;
+    justify-content: center;
+    gap: 4vw;
+    padding: 0 2vw;
+    height: calc(87vh - 20px); /* subtract border width */
+    box-sizing: border-box;
+    margin-bottom: 1vh;
+}
+
+.lobby-section {
+    flex: 1;
+    max-width: 500px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.section-top {
+    height: 25%;
+    padding: 1vh;
+    background: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 5px 5 rgba(255, 255, 255, 0.1);
+}
+
+.section-title {
+    font-size: clamp(1.2rem, 3vh, 2rem);
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.match_img {
+    height: 20vh;
+    width: auto;
+    object-fit: contain;
+    margin: 2vh auto;
+    display: block;
+}
+
+.text-muted {
+    font-size: clamp(0.7rem, 1.5vh, 0.9rem);
+    text-align: center;
+    margin: 1vh 0;
+    padding: 0 1vw;
+}
+
+.section-bottom {
+    height: 25%;
+    padding: 1vh;
+    background: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: auto;
+    box-shadow: 0 -5px 5 rgba(255, 255, 255, 0.1);
+}
+
+.queue-status {
+    font-size: clamp(0.8rem, 2vh, 1.2rem);
+    text-align: center;
+    margin: 1vh 0;
+}
+
+.custom-btn {
+    width: 90%;
+    max-width: 300px;
+    padding: 1vh;
+    font-size: clamp(0.8rem, 1.8vh, 1rem);
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin: 0 auto;
+}
+
+.custom-btn:hover {
+    background-color: #0056b3;
+}
+
+.form-control {
+    width: 90%;
+    max-width: 280px;
+    padding: 1vh 2vh;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 1vh;
+    font-size: clamp(0.8rem, 1.8vh, 1rem);
+    font-family: "Makinas-4";
+}
+
+.form-control::placeholder {
+    color: transparent;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.form-label {
+    font-size: clamp(0.8rem, 2vh, 1.2rem);
+    text-align: center;
+    display: block;
+    margin-bottom: 1vh;
+}
+
+@media (max-width: 768px) {
+    .lobby-sections {
+        flex-direction: column;
+        gap: 1vh;
+        height: auto;
+        padding: 1vh;
+        justify-content: center;
+    }
+    
+    .lobby-section {
+        height: calc((87vh - 20px - 2vh) / 2); /* Divide available space by 2 */
+    }
+
+    .section-top, .section-bottom {
+        padding: 0.5vh;
+    }
+
+    .match_img {
+        height: 13vh;
+    }
+
+    .form-label {
+        display: none;
+    }
+    
+    .form-control::placeholder {
+        color: #6c757d;
+        opacity: 0.7;
+        font-family: "Makinas-4";
+    }
+}
+
+.animate {
+    display: inline-block;
+}
+
+@keyframes ani {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 91% 91%; }
+}

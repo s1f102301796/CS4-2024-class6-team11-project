@@ -2,98 +2,133 @@ document.addEventListener("DOMContentLoaded", () => {
     const boardElement = document.getElementById("othello-board");
     const currentTurnElement = document.getElementById("current-turn");
     const winnerElement = document.getElementById("winner");
-    const roomName = "example_room"; // WebSocketルーム名（適宜変更）
+    const playerColorElement = document.getElementById("player-color");
+    const chatContainer = document.getElementById("chat-container");
+    const messageInput = document.getElementById("message-input");
+    const sendButton = document.getElementById("send-button");
+    const statusMessage = document.createElement("div");
+    statusMessage.id = "status-message";
+    document.body.appendChild(statusMessage);
 
     let gameSocket = null;
+    let playerColor = null;
+    let reconnectTimer = null;
 
-    // WebSocketの初期化関数
     function initializeWebSocket() {
+        if (gameSocket) {
+            gameSocket.close();
+        }
+
         gameSocket = new WebSocket(`ws://${window.location.host}/ws/game/${roomName}/`);
 
-        // WebSocket接続時
         gameSocket.onopen = () => {
             console.log("WebSocket connection established.");
-        };
-
-        // WebSocketメッセージ受信時
-        gameSocket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log("WebSocket message received:", data);
-
-            if (data.type === "update") {
-                updateBoard(data.board, data.placeable_positions);
-                updateCurrentTurn(data.current_turn);
-                updateWinner(data.winner);
+            clearStatus();
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
             }
         };
 
-        // WebSocketエラー時
-        gameSocket.onerror = (error) => {
-            console.error("WebSocket error:", error);
+        gameSocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            switch (data.type) {
+                case "player_color":
+                    playerColor = data.player_color;
+                    console.log(playerColor);
+                    updatePlayerColor(playerColor);
+                    break;
+
+                case "update":
+                    if (data.winner) {
+                        winnerElement.textContent = `Player ${data.winner} WIN!`;
+                    } else {
+                        updateBoard(data.board, data.placeable_positions);
+                        updateCurrentTurn(data.current_turn);
+                    }
+                    break;
+
+                case "error":
+                    alert(data.message);
+                    break;
+
+                case "player_disconnected":
+                    showStatus(data.message, "warning");
+                    break;
+
+                case "game_ended":
+                    showStatus(data.message, "error");
+                    winnerElement.textContent = `Player ${data.winner} WIN!`;
+                    break;
+
+                case "chat_message":
+                    addChatMessage(data.message, data.username, data.player_color);
+                    break;
+            }
         };
 
-        // WebSocket切断時
+        gameSocket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+            showStatus("Connection error occurred", "error");
+        };
+
         gameSocket.onclose = (event) => {
             console.warn("WebSocket connection closed, attempting to reconnect...");
-            setTimeout(initializeWebSocket, 1000); // 1秒後に再接続を試みる
+            showStatus("Connection lost. Attempting to reconnect...", "warning");
+            
+            // 再接続を試みる
+            reconnectTimer = setTimeout(initializeWebSocket, 1000);
         };
     }
 
-    // WebSocket経由で駒を置くデータを送信
+    function showStatus(message, type = "info") {
+        statusMessage.textContent = message;
+        statusMessage.className = `status-message ${type}`;
+        statusMessage.style.display = "block";
+    }
+
+    function clearStatus() {
+        statusMessage.style.display = "none";
+    }
+
     function placeDisc(row, col) {
-        if (gameSocket.readyState === WebSocket.OPEN) {
+        if (gameSocket && gameSocket.readyState === WebSocket.OPEN) {
             gameSocket.send(JSON.stringify({
                 type: "place_disc",
                 row: row,
                 col: col,
             }));
-        } else {
-            console.error("Cannot place disc, WebSocket is not open.");
         }
     }
 
-    // API リクエストの共通関数
-    async function apiRequest(endpoint, method = "GET", body = null) {
-        const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
-        const options = {
-            method,
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken,
-            },
-        };
-        if (body) {
-            options.body = JSON.stringify(body);
-        }
-        try {
-            const response = await fetch(endpoint, options);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error(`Error with API request to ${endpoint}:`, error);
-            throw error;
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (message && gameSocket && gameSocket.readyState === WebSocket.OPEN) {
+            gameSocket.send(JSON.stringify({
+                type: "message_send",
+                message: message
+            }));
+            messageInput.value = "";
         }
     }
 
-    // ボードデータの取得と更新
-    async function fetchBoard() {
-        try {
-            const data = await apiRequest("/game/get_board/");
-            console.log("Board data received:", data);
-            updateBoard(data.board, data.placeable_positions);
-            updateCurrentTurn(data.current_turn);
-            updateWinner(data.winner);
-        } catch (error) {
-            console.error("Error fetching board:", error);
-            alert("Failed to fetch the board. Please try again.");
+    function addChatMessage(message, username, messagePlayerColor) {
+        const messageElement = document.createElement("div");
+        messageElement.className = "chat-message";
+        if (messagePlayerColor === playerColor) {
+            messageElement.classList.add("my-message");
         }
+        messageElement.innerHTML = `
+            <span class="username ${messagePlayerColor}">${username}</span>
+            <span class="message-content">${message}</span>
+        `;
+        chatContainer.appendChild(messageElement);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ボードを更新
     function updateBoard(board, placeablePositions) {
-        boardElement.innerHTML = ""; // 既存のボードをクリア
+        boardElement.innerHTML = "";
 
         const tableElement = document.createElement("table");
 
@@ -111,7 +146,6 @@ document.addEventListener("DOMContentLoaded", () => {
         boardElement.appendChild(tableElement);
     }
 
-    // セルを生成
     function createBoardCell(cell, rowIndex, colIndex, placeablePositions) {
         const cellElement = document.createElement("td");
         cellElement.id = `cell-${rowIndex}-${colIndex}`;
@@ -124,41 +158,37 @@ document.addEventListener("DOMContentLoaded", () => {
         } else if (isPlaceable(rowIndex, colIndex, placeablePositions)) {
             cellElement.classList.add("placeable");
             cellElement.addEventListener("click", () => placeDisc(rowIndex, colIndex));
-        } else {
-            cellElement.textContent = ""; // 空白
         }
 
         return cellElement;
     }
 
-    // 設置可能なマスかどうか確認
     function isPlaceable(row, col, placeablePositions) {
         return placeablePositions.some(([x, y]) => x === row && y === col);
     }
 
-    // 現在のターンを更新
-    function updateCurrentTurn(turn) {
-        currentTurnElement.textContent = `Current Turn: ${turn}`;
+    function updatePlayerColor(color) {
+        playerColorElement.textContent = `Your Color: ${color}`;
     }
 
-    // 勝者の表示を更新
-    function updateWinner(winner) {
-        if (winner) {
-            const message =
-                winner === "black"
-                    ? "Game Over! Black wins!"
-                    : winner === "white"
-                    ? "Game Over! White wins!"
-                    : "Game Over! It's a tie!";
-            winnerElement.textContent = message;
-        } else {
-            winnerElement.textContent = ""; // ゲーム継続中ならクリア
+    function updateCurrentTurn(turn) {
+        currentTurnElement.textContent = `Current Turn: ${turn}`;
+        if (playerColor === turn) {
+            currentTurnElement.textContent += " (Your turn)";
         }
     }
 
-    // 初期ロード時にボードを取得
-    fetchBoard();
+    if (sendButton) {
+        sendButton.addEventListener("click", sendMessage);
+    }
 
-    // WebSocketを初期化
+    if (messageInput) {
+        messageInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+    }
+
     initializeWebSocket();
 });

@@ -1,50 +1,157 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Othello Lobby</title>
-</head>
-<body>
-    <h1>Othello Lobby</h1>
+{% extends 'game/base.html' %}
+{% load static %}
+{% block title %}Othello Game{% endblock %}
 
-    <!-- ランダムマッチング用セクション -->
-    <section>
-        <h2>Join Random Match</h2>
-        <button id="join-queue-btn">Join Matchmaking Queue</button>
-        <div id="queue-status" style="display: none;">Waiting for players...</div>
-    </section>
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'game/css/index.css' %}">
+{% endblock %}
 
-    <!-- 手動で部屋名を指定するセクション -->
-    <section>
-        <h2>Join Specific Room</h2>
-        <form id="room-form">
-            <label for="room-name">Enter Room Name:</label>
-            <input type="text" id="room-name" required>
-            <button type="submit">Join Room</button>
-        </form>
-    </section>
+{% block content %}
+    <div class="lobby-container">
+        <!-- タイトル -->
+        <h1 class="main-title"><span class="animate">○</span>thello <span class="animate">●</span>nline</h1>
+        <h3 class="sub-title">- Welcome -</h3>
+
+        <!-- マッチングセクション -->
+        <div class="lobby-sections">
+            <!-- ランダムマッチング用セクション -->
+            <div class="lobby-section">
+                <div class="section-top">
+                    <h2 class="section-title">Join Random Match</h2>
+                </div>
+                    <img src="{% static 'game/img/unknown_opponent.png' %}" alt="randommatch" class="match_img">
+                <p class="text-muted">ランダムなプレイヤーとマッチします</p>
+                <p class="text-muted">30秒経ってもマッチしなければもう一度押してください</p>
+                <div class="section-bottom">
+                    <div id="queue-status" class="queue-status">
+                        You are not in queue...
+                    </div>
+                    <button id="join-queue-btn" class="custom-btn">Join Queue</button>
+                </div>
+            </div>
+
+            <!-- 手動で部屋名を指定するセクション -->
+            <div class="lobby-section">
+                <div class="section-top">
+                    <h2 class="section-title">Join Private Match</h2>
+                </div>
+                    <img src="{% static 'game/img/friend_opponent.png' %}" alt="privatematch" class="match_img">
+                    <p class="text-muted">部屋名を指定してマッチングします</p>
+                    <p class="text-muted">※記号は使用不可です</p>
+                <div class="section-bottom">
+                    <form id="room-form">
+                        <div class="mb-3">
+                            <label for="room-name" class="form-label">Enter Room Name</label>
+                            <input type="text" class="form-control" id="room-name" placeholder="Enter Room Name" required>
+                        </div>
+                        <button type="submit" class="custom-btn">Join Room</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // ランダムマッチング用スクリプト
-        const joinQueueButton = document.getElementById("join-queue-btn");
-        const queueStatus = document.getElementById("queue-status");
+        // WebSocket接続の確立
+        const matchmakingWs = new WebSocket('ws://' + window.location.host + '/ws/game/');
 
-        joinQueueButton.addEventListener("click", () => {
-            queueStatus.style.display = "block"; // 状態を表示
-            fetch('/game/join_queue/') // サーバーにランダムマッチングのリクエストを送信
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = `/game/${data.room_name}/`; // 自動生成された部屋に移動
-                    } else {
-                        queueStatus.textContent = "Error: Unable to join matchmaking queue.";
-                    }
-                })
-                .catch(error => {
-                    queueStatus.textContent = "Error: Unable to connect to the server.";
-                });
+        // UI要素の取得
+        const joinQueueBtn = document.getElementById('join-queue-btn');
+        const queueStatus = document.getElementById('queue-status');
+        let animationInterval = null;
+
+        joinQueueBtn.onclick = () => startRandomMatch();
+
+        function showSearchingUI() {
+            joinQueueBtn.textContent = 'Cancel Matchmaking'; // ボタンのテキストを変更
+            let dotCount = 0;
+            queueStatus.textContent = 'Waiting for players';
+
+            animationInterval = setInterval(() => {
+                dotCount = (dotCount + 1) % 4;
+                queueStatus.textContent = 'Waiting for players' + '.'.repeat(dotCount);
+            }, 500);
+            joinQueueBtn.onclick = () => cancelRandomMatch();
+        }
+
+        function hideSearchingUI() {
+            joinQueueBtn.textContent = 'Re Join Queue'; // ボタンのテキストを元に戻す
+            queueStatus.textContent = 'Soryy... Player not found';
+
+            clearInterval(animationInterval);
+            animationInterval = null;
+
+            // ボタンのクリックイベントを元のランダムマッチ開始処理に戻す
+            joinQueueBtn.onclick = () => startRandomMatch();
+        }
+
+        // WebSocket接続時の処理
+        matchmakingWs.onopen = function() {
+            console.log('WebSocket connection established');
+            joinQueueBtn.disabled = false;
+        };
+
+        // WebSocketエラー時の処理
+        matchmakingWs.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            alert('接続エラーが発生しました。ページを更新してください。');
+            hideSearchingUI();
+        };
+
+        // WebSocket切断時の処理
+        matchmakingWs.onclose = function() {
+            console.log('WebSocket connection closed');
+            joinQueueBtn.disabled = true;
+            hideSearchingUI();
+        };
+
+        // サーバーからのメッセージ受信処理
+        matchmakingWs.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            switch(data.type) {
+                case 'match_found':
+                    // マッチが見つかったら、ゲームページに遷移
+                    window.location.href = `/game/${data.room_name}/`;
+                    break;
+                    
+                case 'match_timeout':
+                    hideSearchingUI();
+                    break;
+                    
+                case 'match_cancelled':
+                    hideSearchingUI();
+                    break;
+            }
+        };
+
+        // ランダムマッチ開始関数
+        function startRandomMatch() {
+            const message = JSON.stringify({
+                type: 'search_random_match'
+            });
+            console.log('Sending message:', message);
+            matchmakingWs.send(message);
+            showSearchingUI();
+        }
+
+        function cancelRandomMatch() {
+            const message = JSON.stringify({
+                type: 'cancel_random_match'
+            });
+            console.log('Sending cancel message:', message);
+            matchmakingWs.send(message);
+            hideSearchingUI(); // ボタンを元の状態に戻す
+        }
+
+
+        // ページ遷移時のクリーンアップ
+        window.addEventListener('beforeunload', () => {
+            if (matchmakingWs.readyState === WebSocket.OPEN) {
+                matchmakingWs.close();
+            }
         });
+        
 
         // 指定部屋参加用スクリプト
         document.getElementById("room-form").addEventListener("submit", (event) => {
@@ -55,6 +162,4 @@
             }
         });
     </script>
-</body>
-</html>
-
+{% endblock %}

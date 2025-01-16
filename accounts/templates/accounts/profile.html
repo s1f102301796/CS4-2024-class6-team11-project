@@ -1,13 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Profile</title>
-</head>
-<body>
-    <h2>Welcome, {{ user.username }}</h2>
-    <p>Games Played: {{ user.games_played }}</p>
-    <p>Games Won: {{ user.games_won }}</p>
-    <p>Win Rate: {{ user.win_rate }}%</p>
-    <a href="{% url 'logout' %}">Logout</a>
-</body>
-</html>
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block title %}profile{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/css/common.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="lobby-container">
+    <h1 class="main-title"><span class="animate">○</span>thello <span class="animate">●</span>nline</h1>
+    <p class="sub-title">- Profile -</p>
+    <div class="lobby-sections">
+        <div class="lobby-section">
+            <div class="section-top">
+                <h2 class="section-title">Welcome, {{ user.username }}</h2>
+            </div>
+            <div>
+                <p class="queue-status">Games Played: {{ user.games_played }}</p>
+                <p class="queue-status">Games Won: {{ user.games_won }}</p>
+                <p class="queue-status">Win Rate: {{ user.win_rate }}%</p>
+            </div>
+            <div class="section-bottom">
+                <a class="custom-btn" href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,19 +3,10 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class MatchmakingQueue(models.Model):
-    user = models.OneToOneField(
-        get_user_model(), on_delete=models.CASCADE, related_name="queue"
-    )
-    joined_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} joined at {self.joined_at}"
-
 
 # オセロクラス
 class Othello(models.Model):
-    room_name = models.CharField(max_length=255, unique=True)
+    room_name = models.CharField(max_length=255, unique=True, db_index=True)
     player_black = models.ForeignKey(
         User,
         related_name="games_as_black",
@@ -30,6 +21,12 @@ class Othello(models.Model):
         null=True,
         blank=True
     )
+
+    class Meta:
+        # room_nameでの検索を高速化
+        indexes = [
+            models.Index(fields=['room_name']),
+        ]
 
     black_score = models.IntegerField(default=0)
     white_score = models.IntegerField(default=0)

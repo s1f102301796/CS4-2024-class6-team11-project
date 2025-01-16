@@ -1,14 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-</head>
-<body>
-    <h2>Register</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-</body>
-</html>
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block title %}signup{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/css/common.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="lobby-container">
+    <h1 class="main-title"><span class="animate">○</span>thello <span class="animate">●</span>nline</h1>
+    <p class="sub-title">- Sign Up -</p>
+    <div class="lobby-sections">
+        <div class="lobby-section">
+            <div class="section-top">
+                <h2 class="section-title">Create an Account</h2>
+            </div>
+            <div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ form.username.label_tag }}
+                        {{ form.username }}
+                        <div class="error-message">{{ form.username.errors }}</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                        <div class="error-message">{{ form.email.errors }}</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.password1.label_tag }}
+                        {{ form.password1 }}
+                        <div class="error-message">{{ form.password1.errors }}</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.password2.label_tag }}
+                        {{ form.password2 }}
+                        <div class="error-message">{{ form.password2.errors }}</div>
+                    </div>
+            </div>
+            <div class="section-bottom">
+                <p class="text-muted">Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+                <button class="custom-btn" type="submit">Register</button>
+                    </div>
+                </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,27 +2,55 @@
 {% load static %}
 {% block title %}Othello Game{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'game/css/othello.css' %}">
+{% endblock %}
+
 {% block content %}
 <script>
     const roomName = "{{ room_name|escapejs }}";  // Djangoテンプレートからルーム名を取得
 </script>
 
-<div id="player-info">
-    <p><strong>Black:</strong> {{ player_black.username }} (Win Rate: {{ player_black.win_rate }}%)</p>
-    <p><strong>White:</strong> {{ player_white.username }} (Win Rate: {{ player_white.win_rate }}%)</p>
-    <p><strong>Your Color:</strong> {{ current_user.username }}</p>
-</div>
+<div id="game-container">
+    <!-- プレイヤー情報 -->
+        <div class="side-section" id="player_info">
+            <div class="section-top">
+                <h2 class="section-title">Match Info</h2>
+            </div>
+            <p><strong>Black:</strong> {{ player_black.username }} (Win Rate: {{ player_black.win_rate }}%)</p>
+            <p><strong>White:</strong> {{ player_white.username }} (Win Rate: {{ player_white.win_rate }}%)</p>
+            <p id="player-color"><strong>Your Color:</strong> {{ current_user.username }}</p>
+            <p id="current-turn"><strong>Current Turn:</strong> {{ current_turn }}</p>
+            {% if winner %}
+                <p id="winner"><strong>Winner:</strong> {{ winner }}</p>
+            {% endif %}
+            <div class="section-bottom">
+            </div>
+        </div>
 
-<p id="current-turn"><strong>Current Turn:</strong> {{ current_turn }}</p>
-
-<div id="winner">
-    {% if winner %}
-        <p><strong>Winner:</strong> {{ winner }}</p>
-    {% endif %}
-</div>
-
-<div id="othello-board-background">
-    <div id="othello-board"></div> <!-- JavaScriptがボードを描画 -->
+    <!-- オセロボード -->
+    <div class="main-section" id="input-screen">
+        <div id="othello-board-background">
+            <div id="othello-board">
+                <!-- JavaScriptでボードが描画される -->
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="message-input" placeholder="メッセージを入力...">
+            <button id="send-button">送信</button>
+        </div>
+    </div>
+    <!-- チャットエリア -->
+    <div class="side-section" id="chat-container">
+        <div class="section-top">
+            <h2 class="section-title">Chat Log</h2>
+        </div>
+        <div class="chat-log" id="chat-log">
+            <!-- チャットログがJavaScriptで流れる -->
+        </div>
+        <div class="section-bottom">
+        </div>
+    </div>
 </div>
 
 <script src="{% static 'game/js/othello.js' %}"></script>

@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
-from .models import Othello, MatchmakingQueue
+from .models import Othello
 
 waiting_players = []
 
@@ -11,26 +11,6 @@ waiting_players = []
 def index(request):
     # ロビー画面を表示
     return render(request, "game/index.html")
-
-
-@csrf_exempt
-def join_queue(request):
-    global waiting_players
-    player = request.user.username if request.user.is_authenticated else 'Guest'
-
-    if player not in waiting_players:
-        waiting_players.append(player)
-
-    # プレイヤーが2人揃った場合に部屋を作成
-    if len(waiting_players) >= 2:
-        player1 = waiting_players.pop(0)
-        player2 = waiting_players.pop(0)
-        room_name = f"{player1}_vs_{player2}"  # 部屋名を生成
-
-        # 必要に応じて部屋情報を保存する処理を追加可能
-        return JsonResponse({'success': True, 'room_name': room_name})
-    else:
-        return JsonResponse({'success': False, 'message': 'Waiting for another player.'})
 
 
 @login_required
