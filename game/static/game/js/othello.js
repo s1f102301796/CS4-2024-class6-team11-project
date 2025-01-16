@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const statusMessage = document.createElement("div");
     statusMessage.id = "status-message";
     document.body.appendChild(statusMessage);
+    const roomName = JSON.parse();
 
     let gameSocket = null;
     let playerColor = null;
